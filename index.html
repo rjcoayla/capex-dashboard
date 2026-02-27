@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard CAPEX Minero</title>
+  <meta name="description" content="Dashboard ejecutivo de CAPEX para operaciones mineras. Monitoreo de inversiones de capital por proyecto, área y tipo de gasto." />
+
+  <!-- Fuentes: Barlow Condensed (títulos) + DM Sans (cuerpo) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js v4 desde CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+  <!-- Hoja de estilos principal -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════
+       TOPBAR
+       ══════════════════════════════════════════════════ -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-icon">⛏</div>
+      <div>
+        <div class="topbar-title">Dashboard CAPEX Minero</div>
+        <div class="topbar-subtitle">Monitoreo de Inversiones de Capital · 2024–2026</div>
+      </div>
+    </div>
+
+    <!-- Botón visible solo en mobile para mostrar/ocultar filtros -->
+    <button class="filter-toggle-btn" id="btn-toggle-filters" aria-label="Mostrar filtros">
+      ▼ Mostrar filtros
+    </button>
+
+    <div class="topbar-meta">
+      <div class="tag-live">Datos Activos</div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════
+       APP WRAPPER = Sidebar + Contenido
+       ══════════════════════════════════════════════════ -->
+  <div class="app-wrapper">
+
+    <!-- ── Sidebar de Filtros ── -->
+    <aside class="filters-sidebar" id="filters-sidebar" aria-label="Filtros del dashboard">
+
+      <div class="filters-header">
+        <span class="filters-title">Segmentadores</span>
+        <button class="btn-clear" id="btn-clear-filters" title="Limpiar todos los filtros">
+          Limpiar
+        </button>
+      </div>
+
+      <!-- Filtro: Año -->
+      <div class="filter-group">
+        <label class="filter-label" for="filtro-anio">Año</label>
+        <select class="filter-select" id="filtro-anio" aria-label="Filtrar por año">
+          <option value="">Todos los años</option>
+        </select>
+      </div>
+
+      <!-- Filtro: Mes -->
+      <div class="filter-group">
+        <label class="filter-label" for="filtro-mes">Mes</label>
+        <select class="filter-select" id="filtro-mes" aria-label="Filtrar por mes">
+          <option value="">Todos los meses</option>
+        </select>
+      </div>
+
+      <div class="filter-divider"></div>
+
+      <!-- Filtro: Área Responsable -->
+      <div class="filter-group">
+        <label class="filter-label" for="filtro-area">Área Responsable</label>
+        <select class="filter-select" id="filtro-area" aria-label="Filtrar por área">
+          <option value="">Todas las áreas</option>
+        </select>
+      </div>
+
+      <!-- Filtro: Tipo de CAPEX -->
+      <div class="filter-group">
+        <label class="filter-label" for="filtro-tipo">Tipo de CAPEX</label>
+        <select class="filter-select" id="filtro-tipo" aria-label="Filtrar por tipo">
+          <option value="">Todos los tipos</option>
+        </select>
+      </div>
+
+      <div class="filter-divider"></div>
+
+      <!-- Filtro: Estado del Proyecto -->
+      <div class="filter-group">
+        <label class="filter-label" for="filtro-estado">Estado del Proyecto</label>
+        <select class="filter-select" id="filtro-estado" aria-label="Filtrar por estado">
+          <option value="">Todos los estados</option>
+        </select>
+      </div>
+
+      <!-- Filtro: Región -->
+      <div class="filter-group">
+        <label class="filter-label" for="filtro-region">Región</label>
+        <select class="filter-select" id="filtro-region" aria-label="Filtrar por región">
+          <option value="">Todas las regiones</option>
+        </select>
+      </div>
+
+      <!-- Chips de filtros activos -->
+      <div class="active-filters" id="active-filters" aria-label="Filtros activos">
+        <!-- Los chips se generan dinámicamente con JS -->
+      </div>
+
+    </aside>
+
+    <!-- ── Contenido Principal ── -->
+    <main class="main-content" id="main-content">
+
+      <!-- ─ KPIs ─ -->
+      <section aria-label="Indicadores clave de rendimiento">
+        <div class="section-label">KPIs Ejecutivos</div>
+
+        <div class="kpi-grid">
+
+          <div class="kpi-card accent-gold">
+            <div class="kpi-badge">💰</div>
+            <div class="kpi-label">CAPEX Presupuestado Total</div>
+            <div class="kpi-value" id="kpi-presupuestado">—</div>
+            <div class="kpi-sub">USD · Período seleccionado</div>
+          </div>
+
+          <div class="kpi-card accent-teal">
+            <div class="kpi-badge">✅</div>
+            <div class="kpi-label">CAPEX Ejecutado Total</div>
+            <div class="kpi-value" id="kpi-ejecutado">—</div>
+            <div class="kpi-sub">USD · Período seleccionado</div>
+          </div>
+
+          <div class="kpi-card accent-orange">
+            <div class="kpi-badge">📊</div>
+            <div class="kpi-label">% Ejecución Global</div>
+            <div class="kpi-value" id="kpi-pct">—</div>
+            <div class="kpi-sub" id="kpi-pct-sub">Ejecutado / Presupuestado</div>
+          </div>
+
+          <div class="kpi-card accent-red">
+            <div class="kpi-badge">🚧</div>
+            <div class="kpi-label">Proyectos Activos</div>
+            <div class="kpi-value" id="kpi-activos">—</div>
+            <div class="kpi-sub">Con estado "En ejecución"</div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ─ Gráficos ─ -->
+      <section aria-label="Gráficos analíticos">
+        <div class="section-label">Análisis de CAPEX</div>
+
+        <!--
+          Grid de 4 columnas en desktop.
+          chart-wide = span 2 (gráfica de línea y la de presupuesto por proyecto)
+          chart-normal = span 1 (barras por área y doughnut por tipo)
+        -->
+        <div class="charts-grid">
+
+          <!-- Barras horizontales: CAPEX por Área (span 1 en desktop) -->
+          <div class="chart-card chart-normal" aria-label="CAPEX por área responsable">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Por Área Responsable</div>
+                <div class="chart-subtitle">Presupuestado vs Ejecutado (USD)</div>
+              </div>
+              <span class="chart-badge badge-gold">Barras</span>
+            </div>
+            <div class="chart-canvas-wrapper">
+              <canvas id="canvas-area"></canvas>
+            </div>
+          </div>
+
+          <!-- Doughnut: CAPEX por Tipo (span 1 en desktop) -->
+          <div class="chart-card chart-normal" aria-label="CAPEX por tipo de gasto">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Por Tipo de CAPEX</div>
+                <div class="chart-subtitle">Distribución del ejecutado</div>
+              </div>
+              <span class="chart-badge badge-teal">Doughnut</span>
+            </div>
+            <div class="chart-canvas-wrapper">
+              <canvas id="canvas-tipo"></canvas>
+            </div>
+          </div>
+
+          <!-- Línea temporal: Evolución mensual (span 2 en desktop = ancho completo 2 cols) -->
+          <div class="chart-card chart-wide" aria-label="Evolución mensual de CAPEX">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Evolución Mensual del CAPEX</div>
+                <div class="chart-subtitle">CAPEX Ejecutado y Presupuestado por mes · 2024–2026</div>
+              </div>
+              <span class="chart-badge badge-teal">Línea / Tiempo</span>
+            </div>
+            <div class="chart-canvas-wrapper">
+              <canvas id="canvas-linea"></canvas>
+            </div>
+          </div>
+
+          <!-- Barras: Presupuestado vs Ejecutado Top 8 proyectos (span 2 en desktop) -->
+          <div class="chart-card chart-wide" aria-label="Presupuestado vs Ejecutado top proyectos">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Presupuestado vs Ejecutado — Top 8 Proyectos</div>
+                <div class="chart-subtitle">Barras en rojo = sobre-ejecución · en verde = dentro del presupuesto</div>
+              </div>
+              <span class="chart-badge badge-orange">Comparativo</span>
+            </div>
+            <div class="chart-canvas-wrapper">
+              <canvas id="canvas-presupuesto"></canvas>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ─ Tabla Top 10 ─ -->
+      <section aria-label="Tabla de top 10 proyectos">
+        <div class="section-label">Top 10 Proyectos por CAPEX Ejecutado</div>
+
+        <div class="table-card">
+          <div class="table-header">
+            <div class="table-title">🏆 Ranking de Proyectos · Estado de Ejecución</div>
+            <span class="chart-badge badge-gold">Top 10</span>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Proyecto</th>
+                  <th>Estado</th>
+                  <th>Presupuestado</th>
+                  <th>Ejecutado</th>
+                  <th>% Avance</th>
+                  <th>Tipo CAPEX</th>
+                  <th>Responsable</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-top10-body">
+                <!-- Filas generadas por JS -->
+                <tr>
+                  <td colspan="8" style="text-align:center;color:var(--text-muted);padding:2rem;">
+                    Cargando datos…
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main><!-- /main-content -->
+  </div><!-- /app-wrapper -->
+
+  <!-- ══════════════════════════════════════════════════
+       FOOTER
+       ══════════════════════════════════════════════════ -->
+  <footer class="app-footer">
+    <span>Dashboard CAPEX Minero · Datos Simulados 2024–2026</span>
+    <span>HTML · CSS · JavaScript · Chart.js 4</span>
+  </footer>
+
+  <!-- Script principal -->
+  <script src="js/app.js"></script>
+
+</body>
+</html>
